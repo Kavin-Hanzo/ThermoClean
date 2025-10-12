@@ -1,0 +1,18 @@
+# core numerical & scientific
+numpy>=1.23.5
+pandas
+scipy>=1.9.3
+
+# image processing (headless build for servers/CI)
+opencv-python-headless>=4.7.0
+
+# image features and I/O helpers
+scikit-image>=0.19.3
+
+# utilities & plotting
+tqdm>=4.65.0
+matplotlib>=3.6.3
+
+pyyaml>=6.0
+Flask>=2.0.0
+Pillow>=9.0.0

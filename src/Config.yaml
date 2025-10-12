@@ -1,0 +1,26 @@
+datacreator:
+  input_dir: Datasets/test
+  output_dir: Degraded/
+  variants: 1
+  quadrants: ['top-left', 'top-right', 'bottom-left', 'bottom-right','center']
+  overwrite: true
+  radius: 0.85
+  amplitude: 0.5
+  bg_amp: 0.02
+  gauss: 0.01
+  poisson: 0.0
+  seed: 42
+
+denoiser:
+  output_root: Denosied/
+  algos: ['fast','cao_tisse','zheng','liu_zhang','li_multiscale','shi_2019','shi_2022']
+  num_categories: 10
+  num_images: 20
+  n_iter: 9
+  gamma: 0.045
+  seed: 42
+
+evaluator:
+  # (add any evaluator-specific options here if needed)
+
+compare: True

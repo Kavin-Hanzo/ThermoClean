@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>BFBSF Demo Web App</title>
+    <!-- Bootstrap CSS (CDN) -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        /* small custom tweaks */
+        .card-img-top { max-height: 240px; object-fit: contain; }
+        pre.metrics { background:#f8f9fa; padding:8px; border-radius:4px; }
+        .uploads-list, .degraded-list, .denoised-list { max-height: 360px; overflow:auto; }
+    </style>
+</head>
+
+<body>
+    <div class="container py-4">
+        <h2 class="mb-3">Image Upload · Degrade · Denoise</h2>
+
+        {% with messages = get_flashed_messages() %}
+        {% if messages %}
+        <div class="mb-3">
+            {% for msg in messages %}
+            <div class="alert alert-info" role="alert">{{ msg }}</div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        {% endwith %}
+
+        <div class="row g-3">
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Upload image</h5>
+                        <form action="{{ url_for('upload') }}" method="post" enctype="multipart/form-data">
+                            <div class="mb-2">
+                                <input class="form-control" type="file" name="file" accept="image/*">
+                            </div>
+                            <button class="btn btn-primary" type="submit">Upload (save grayscale)</button>
+                        </form>
+
+                        <hr>
+                        <h6>Uploaded images</h6>
+                        <div class="uploads-list">
+                            <form action="{{ url_for('degrade') }}" method="post">
+                                <div class="mb-2">
+                                    <select class="form-select" name="upload_filename">
+                                        <option value="">-- select uploaded --</option>
+                                        {% for p in uploads %}
+                                        <option value="{{ p.name }}">{{ p.name }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                <button class="btn btn-outline-secondary btn-sm" type="submit">Degrade selected</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title">Denoise</h5>
+                        <form action="{{ url_for('denoise') }}" method="post">
+                            <div class="mb-2">
+                                <label class="form-label">Degraded image</label>
+                                <select class="form-select" name="degraded_filename">
+                                    <option value="">-- select degraded --</option>
+                                    {% for p in degraded %}
+                                    <option value="{{ p.name }}">{{ p.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label">Denoiser algorithm</label>
+                                <select class="form-select" name="algorithm">
+                                    {% for a in algos %}
+                                    <option value="{{ a }}">{{ a }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <button class="btn btn-success" type="submit">Denoise selected</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h5>Denoised outputs</h5>
+                        <div class="denoised-list">
+                            <ul class="list-unstyled">
+                                {% for p in denoised if p.name.endswith('txt')%}
+                                <li class="mb-2">
+                                    <a href="{{ url_for('denoised_file', filename=p.name) }}">{{ p.name }}</a>
+                                    {% set txt = p.with_suffix('.txt') %}
+                                    {% if txt.exists() %}
+                                    <pre class="metrics mt-1">{{ txt.read_text() }}</pre>
+                                    {% endif %}
+                                </li>
+                                {% endfor %}
+                            </ul>
+                            <div>
+                                {% for p in denoised if p.name.endswith('.png')%}
+                                <img src="{{ url_for('denoised_file', filename=p.name) }}">
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <footer class="mt-4 text-muted">
+            <small>Tip: uploaded images are saved as grayscale PNGs in the <code>Codes/uploads</code> folder.</small>
+        </footer>
+    </div>
+
+    <!-- Bootstrap JS bundle (optional for interactive components) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
+</html>
