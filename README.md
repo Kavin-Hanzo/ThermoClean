@@ -11,24 +11,6 @@ This project provides a complete pipeline for generating, degrading, denoising, 
 - **Configurable Pipeline**: All parameters and paths are controlled via a YAML config file for reproducibility.
 - **Quick Testing**: Scripts for rapid single-image testing of both degradation and denoising steps.
 
-## Folder Structure
-```
-Datasets/
-  Dataset/
-    train/<category>/*.jpg
-    test/<category>/*.jpg
-Codes/
-  Datacreator.py
-  Denoiser.py
-  Algo2.py
-  Evaluator.py
-  quick_denoiser2.py
-  tester.py
-  main.py
-  Config.yaml
-  requirements.txt
-```
-
 ## Getting Started
 
 ### 1. Install Dependencies
