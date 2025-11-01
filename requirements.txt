@@ -1,18 +1,27 @@
-# core numerical & scientific
-numpy>=1.23.5
+# Core scientific stack
+numpy
 pandas
-scipy>=1.9.3
+scipy
+xarray
+netCDF4
 
-# image processing (headless build for servers/CI)
-opencv-python-headless>=4.7.0
+# Machine Learning
+scikit-learn
 
-# image features and I/O helpers
-scikit-image>=0.19.3
+# Oceanographic conversions (TEOS-10 standard)
+gsw
 
-# utilities & plotting
-tqdm>=4.65.0
-matplotlib>=3.6.3
+# Visualization (useful for error plots, depth-MAE curves, etc.)
+matplotlib
+seaborn
 
-pyyaml>=6.0
-Flask>=2.0.0
-Pillow>=9.0.0
+# Big data handling (optional, for 27M+ rows)
+dask[dataframe]
+
+# Utilities
+joblib==1.4.2   # for saving models/scalers
+tqdm==4.66.5    # for progress bars
+
+# File formats
+pyarrow   # Parquet/Arrow
+fastparquet

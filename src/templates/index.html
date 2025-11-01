@@ -8,10 +8,26 @@
     <!-- Bootstrap CSS (CDN) -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        /* small custom tweaks */
-        .card-img-top { max-height: 240px; object-fit: contain; }
-        pre.metrics { background:#f8f9fa; padding:8px; border-radius:4px; }
+        /* larger previews and metrics */
+        .preview-img {
+            max-height: 420px;
+            object-fit: contain;
+            border: 1px solid #e9ecef;
+            background: #ffffff;
+            padding: 6px;
+            border-radius: 6px;
+        }
+        .metrics-large {
+            background:#f8f9fa;
+            padding:12px;
+            border-radius:6px;
+            font-size:1.25rem; /* larger */
+            line-height:1.4;
+            white-space:pre-wrap;
+        }
         .uploads-list, .degraded-list, .denoised-list { max-height: 360px; overflow:auto; }
+        .label-badge { font-weight:600; color:#495057; display:block; margin-bottom:6px; }
+        .tiny-note { font-size:0.85rem; color:#6c757d; }
     </style>
 </head>
 
@@ -29,7 +45,7 @@
         {% endif %}
         {% endwith %}
 
-        <div class="row g-3">
+        <div class="row g-3 mb-4">
             <div class="col-md-4">
                 <div class="card">
                     <div class="card-body">
@@ -49,7 +65,7 @@
                                     <select class="form-select" name="upload_filename">
                                         <option value="">-- select uploaded --</option>
                                         {% for p in uploads %}
-                                        <option value="{{ p.name }}">{{ p.name }}</option>
+                                        <option value="{{ p.name }}" {% if last_uploaded and last_uploaded == p.name %}selected{% endif %}>{{ p.name }}</option>
                                         {% endfor %}
                                     </select>
                                 </div>
@@ -59,6 +75,7 @@
                     </div>
                 </div>
             </div>
+
             <div class="col-md-4">
                 <div class="card">
                     <div class="card-body">
@@ -69,7 +86,7 @@
                                 <select class="form-select" name="degraded_filename">
                                     <option value="">-- select degraded --</option>
                                     {% for p in degraded %}
-                                    <option value="{{ p.name }}">{{ p.name }}</option>
+                                    <option value="{{ p.name }}" {% if last_degraded and last_degraded == p.name %}selected{% endif %}>{{ p.name }}</option>
                                     {% endfor %}
                                 </select>
                             </div>
@@ -86,10 +103,11 @@
                     </div>
                 </div>
             </div>
+
             <div class="col-md-4">
                 <div class="card">
                     <div class="card-body">
-                        <h5>Denoised outputs</h5>
+                        <h5>Eval Metrics</h5>
                         <div class="denoised-list">
                             <ul class="list-unstyled">
                                 {% for p in denoised if p.name.endswith('txt')%}
@@ -97,17 +115,75 @@
                                     <a href="{{ url_for('denoised_file', filename=p.name) }}">{{ p.name }}</a>
                                     {% set txt = p.with_suffix('.txt') %}
                                     {% if txt.exists() %}
-                                    <pre class="metrics mt-1">{{ txt.read_text() }}</pre>
+                                    <div class="metrics-large mt-1">{{ txt.read_text() }}</div>
                                     {% endif %}
                                 </li>
                                 {% endfor %}
                             </ul>
-                            <div>
+                            <!-- <div class="mt-2">
                                 {% for p in denoised if p.name.endswith('.png')%}
-                                <img src="{{ url_for('denoised_file', filename=p.name) }}">
+                                <a href="{{ url_for('denoised_file', filename=p.name) }}" target="_blank" class="me-2">
+                                    <img src="{{ url_for('denoised_file', filename=p.name) }}" class="preview-img" alt="{{ p.name }}">
+                                </a>
                                 {% endfor %}
-                            </div>
+                            </div> -->
                         </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Preview / comparison area: Original | Degraded | Denoised -->
+        <div class="row g-3 mb-4">
+            <div class="col-12">
+                <div class="card p-3">
+                    <h5 class="mb-3">Preview — Original · Degraded · Denoised</h5>
+                    <div class="row text-center align-items-start">
+                        <div class="col-md-4 mb-3">
+                            <span class="label-badge">Original</span>
+                            {% if last_uploaded %}
+                                <a href="{{ url_for('uploaded_file', filename=last_uploaded) }}" target="_blank">
+                                    <img src="{{ url_for('uploaded_file', filename=last_uploaded) }}" class="preview-img" alt="original">
+                                </a>
+                                <div class="tiny-note mt-1">{{ last_uploaded }}</div>
+                            {% else %}
+                                <div class="tiny-note">No original uploaded yet.</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <span class="label-badge">Degraded</span>
+                            {% if last_degraded %}
+                                <a href="{{ url_for('degraded_file', filename=last_degraded) }}" target="_blank">
+                                    <img src="{{ url_for('degraded_file', filename=last_degraded) }}" class="preview-img" alt="degraded">
+                                </a>
+                                <div class="tiny-note mt-1">{{ last_degraded }}</div>
+                            {% else %}
+                                <div class="tiny-note">No degraded image yet.</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <span class="label-badge">Denoised</span>
+                            {% if last_denoised %}
+                                <a href="{{ url_for('denoised_file', filename=last_denoised) }}" target="_blank">
+                                    <img src="{{ url_for('denoised_file', filename=last_denoised) }}" class="preview-img" alt="denoised">
+                                </a>
+                                <div class="tiny-note mt-1">{{ last_denoised }}</div>
+                            {% else %}
+                                <div class="tiny-note">No denoised output yet.</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Show metrics (large) if available -->
+                    <div class="mt-3">
+                        {% if metrics_text %}
+                            {% set mfile = (('Web_denoise/' + metrics_text)) %}
+                            {% set txtp = (Path('Web_denoise')/metrics_text) %}
+                            {% if (Path('Web_denoise')/metrics_text).exists() %}
+                                <h6>Evaluation metrics</h6>
+                                <div class="metrics-large">{{ (Path('Web_denoise')/metrics_text).read_text() }}</div>
+                            {% endif %}
+                        {% endif %}
                     </div>
                 </div>
             </div>
