@@ -1,5 +1,7 @@
 # Aero-Optical Thermal Radiation Degradation & Denoising Pipeline
+
 <img width="1920" height="1080" alt="GUI" src="https://github.com/user-attachments/assets/1878a771-ceca-4842-bc5d-a8d5e2f9a304" />
+
 ## Overview
 This project provides a complete pipeline for generating, degrading, denoising, and evaluating remote sensing images affected by synthetic aero-optical thermal radiation bias. The workflow is modular, reproducible, and configurable via YAML, supporting robust experimentation and benchmarking of denoising algorithms.
 
