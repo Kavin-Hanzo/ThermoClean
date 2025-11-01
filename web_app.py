@@ -10,9 +10,9 @@ import io as _io
 import yaml
 
 # local imports
-from src.Datacreator import degrade_image_with_hotspot
-from src.Denoiser import bfbsf, bfbsf_plus, OTHER_ALGOS
-from src.Evaluator import compute_image_metrics
+from Datacreator import degrade_image_with_hotspot
+from Denoiser import bfbsf, bfbsf_plus, OTHER_ALGOS
+from Evaluator import compute_image_metrics
 
 # Configuration
 BASE_DIR = Path(__file__).resolve().parent
@@ -68,10 +68,19 @@ def index():
     degraded = sorted(DEG_FOLDER.iterdir()) if DEG_FOLDER.exists() else []
     denoised = sorted(DENOISED_FOLDER.iterdir()) if DENOISED_FOLDER.exists() else []
     # read last-processed names from session (set after processing)
+    last_uploaded = session.get('last_uploaded')
     last_degraded = session.get('last_degraded')
     last_denoised = session.get('last_denoised')
+    # metrics file path if exists
+    metrics_path = None
+    if last_denoised:
+        txt = DENOISED_FOLDER / Path("metrics.txt")
+        if txt.exists():
+            metrics_path = txt.name
     return render_template('index.html', algos=algos, uploads=uploads, degraded=degraded,
-                           denoised=denoised, last_degraded=last_degraded, last_denoised=last_denoised)
+                           denoised=denoised, last_uploaded=last_uploaded,
+                           last_degraded=last_degraded, last_denoised=last_denoised,
+                           metrics_path=metrics_path)
 
 
 @app.route('/uploads', methods=['POST'])
@@ -87,6 +96,8 @@ def upload():
         filename = secure_filename(file.filename)
         out_path = UPLOAD_FOLDER / filename
         save_gray_image(file, out_path)
+        # remember last uploaded to show in UI
+        session['last_uploaded'] = filename
         flash(f'Uploaded and saved as grayscale: {filename}')
     else:
         flash('Unsupported file type')
@@ -130,8 +141,9 @@ def degrade():
     out_path = DEG_FOLDER / out_name
     io.imsave(str(out_path), (np.clip(z,0,1)*255).astype(np.uint8))
 
-    # remember last degraded to show in UI
+    # remember last degraded to show in UI and keep reference to original
     session['last_degraded'] = out_name
+    session['last_uploaded'] = fname
     # clear last denoised since new degradation occurred
     session.pop('last_denoised', None)
 
@@ -174,7 +186,7 @@ def denoise():
         flash(f'Unsupported algorithm: {algo}')
         return redirect(url_for('index'))
 
-    out_name = Path("Denoised.png")
+    out_name = Path(f"{Path(dname).stem}_denoised.png")
     out_path = DENOISED_FOLDER / out_name
     io.imsave(str(out_path), (np.clip(f_final,0,1)*255).astype(np.uint8))
 
@@ -188,11 +200,23 @@ def denoise():
         metrics = compute_image_metrics(ref_path, Y_denoised, resize_ref=True)
 
     # save metrics as simple text next to file (optional)
+    txt_path = DENOISED_FOLDER/Path("metrics.txt")
     if metrics is not None:
-        txt_path = DENOISED_FOLDER/Path("metrics.txt")
         with open(txt_path, 'w') as fh:
             for k,v in metrics.items():
                 fh.write(f"{k}: {v}\n")
+    else:
+        # remove stale metrics if any
+        if txt_path.exists():
+            try:
+                txt_path.unlink()
+            except Exception:
+                pass
+
+    # remember last denoised (and keep degraded / uploaded references)
+    session['last_denoised'] = out_name.name
+    # ensure degraded stays set
+    session['last_degraded'] = dname
 
     flash('Denoising complete')
     return redirect(url_for('index'))
